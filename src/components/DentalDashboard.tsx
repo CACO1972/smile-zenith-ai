@@ -198,6 +198,14 @@ const DentalDashboard = () => {
             <BarChart3 className="h-4 w-4 mr-2" />
             Exportar Reporte
           </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => window.open('/smile-analysis', '_blank')}
+          >
+            <Smile className="h-4 w-4 mr-2" />
+            Análisis Facial IA
+          </Button>
           <Button size="sm" className="bg-gradient-primary">
             <Zap className="h-4 w-4 mr-2" />
             Nueva Campaña
