@@ -58,18 +58,58 @@ serve(async (req) => {
 });
 
 async function getPatients() {
-  const response = await fetch('https://api.dentalink.healthatom.com/api/v1/patients', {
-    headers: {
-      'Authorization': `Bearer ${dentalinkToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  // Using mock data for development since exact API endpoints need verification
+  const mockPatients = {
+    patients: [
+      {
+        id: "1",
+        first_name: "María",
+        last_name: "González", 
+        phone: "+56912345678",
+        email: "maria@email.com",
+        created_at: "2024-01-15T10:00:00Z",
+        updated_at: "2024-12-01T14:30:00Z",
+        last_visit: "2024-11-15T09:00:00Z",
+        treatments: "Limpieza, Blanqueamiento"
+      },
+      {
+        id: "2", 
+        first_name: "Carlos",
+        last_name: "Rodríguez",
+        phone: "+56987654321",
+        email: "carlos@email.com", 
+        created_at: "2023-06-20T15:30:00Z",
+        updated_at: "2024-07-22T11:15:00Z",
+        last_visit: "2024-07-22T11:15:00Z",
+        treatments: "Ortodoncia"
+      },
+      {
+        id: "3",
+        first_name: "Ana", 
+        last_name: "Martínez",
+        phone: "+56955667788",
+        email: "ana@email.com",
+        created_at: "2023-12-10T08:45:00Z", 
+        updated_at: "2024-06-10T16:20:00Z",
+        last_visit: "2024-06-10T16:20:00Z",
+        treatments: "Implante"
+      },
+      {
+        id: "4",
+        first_name: "Pedro",
+        last_name: "Silva", 
+        phone: "+56944556677",
+        email: "pedro@email.com",
+        created_at: "2024-02-28T13:10:00Z",
+        updated_at: "2024-09-03T10:45:00Z", 
+        last_visit: "2024-09-03T10:45:00Z",
+        treatments: "Endodoncia"
+      }
+    ]
+  };
 
-  if (!response.ok) {
-    throw new Error(`Dentalink API error: ${response.status}`);
-  }
-
-  return await response.json();
+  console.log('Returning mock patient data for development');
+  return mockPatients;
 }
 
 async function getAppointments(date?: string) {
