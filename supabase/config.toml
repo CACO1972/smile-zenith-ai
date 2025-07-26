@@ -1,1 +1,4 @@
 project_id = "hiibyscrrmunkxqzvyer"
+
+[functions.dentalink-api]
+verify_jwt = false
