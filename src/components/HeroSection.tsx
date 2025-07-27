@@ -20,18 +20,18 @@ const HeroSection = () => {
             </Badge>
             
             <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-white sm:text-6xl lg:col-span-2 xl:col-auto">
-              El Futuro del{" "}
+              Sistema Exclusivo{" "}
               <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                Marketing Dental
+                Clínica Miró
               </span>{" "}
               con IA
             </h1>
             
             <div className="mt-6 max-w-xl text-lg leading-8 text-white/90 lg:max-w-none">
               <p>
-                Transforma tu clínica dental con el sistema de marketing más avanzado de Chile. 
-                Recupera pacientes inactivos, automatiza campañas y multiplica tus ingresos con 
-                inteligencia artificial.
+                Sistema patentado y desarrollado exclusivamente por el Dr. Carlos Montoya 
+                para Clínica Miró. Recupera pacientes inactivos, automatiza campañas y 
+                multiplica tus ingresos con inteligencia artificial de última generación.
               </p>
             </div>
 
@@ -78,14 +78,14 @@ const HeroSection = () => {
             {/* Trust indicators */}
             <div className="mt-10">
               <p className="text-sm text-white/70 mb-4">
-                Confiado por clínicas líderes en Chile:
+                Desarrollado y patentado por:
               </p>
-              <div className="flex flex-wrap gap-4 text-white/60">
-                <span className="text-sm font-medium">Clínica Dental Premium</span>
+              <div className="flex flex-wrap gap-4 text-white/90">
+                <span className="text-sm font-bold">Dr. Carlos Montoya</span>
                 <span className="text-sm font-medium">•</span>
-                <span className="text-sm font-medium">SmileCenter Chile</span>
+                <span className="text-sm font-bold">Director Clínica Miró</span>
                 <span className="text-sm font-medium">•</span>
-                <span className="text-sm font-medium">DentalTech Santiago</span>
+                <span className="text-sm font-medium">Sistema Patentado</span>
               </div>
             </div>
           </div>

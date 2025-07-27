@@ -23,7 +23,7 @@ const Index = () => {
             ¿Listo para ver el sistema en acción?
           </h2>
           <p className="text-muted-foreground mb-8">
-            Explora el dashboard completo con datos reales de clínicas dentales chilenas
+            Explora el sistema exclusivo desarrollado por Dr. Carlos Montoya para Clínica Miró
           </p>
           <Button 
             onClick={() => setCurrentView("dashboard")}

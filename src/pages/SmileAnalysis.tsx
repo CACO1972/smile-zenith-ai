@@ -153,8 +153,8 @@ const SmileAnalysis = () => {
             </h1>
             
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Obtén un diagnóstico estético profesional en minutos. 
-              Nuestra IA analiza tu sonrisa y genera recomendaciones personalizadas
+              Sistema exclusivo de Clínica Miró desarrollado por Dr. Carlos Montoya. 
+              Tecnología patentada que analiza tu sonrisa y genera recomendaciones personalizadas
             </p>
             
             <Button 
@@ -270,7 +270,7 @@ const SmileAnalysis = () => {
             Descubre Tu Potencial de Sonrisa
           </h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Únete a miles de pacientes que han transformado su sonrisa con nuestro análisis IA
+            Experiencia exclusiva de Clínica Miró - Tecnología patentada por Dr. Carlos Montoya
           </p>
           
           <div className="flex items-center justify-center gap-8 mb-8">
