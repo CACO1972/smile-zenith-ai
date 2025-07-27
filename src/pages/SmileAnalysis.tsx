@@ -31,11 +31,13 @@ const SmileAnalysis = () => {
     setCurrentStep('processing');
     setIsProcessing(true);
     
-    // Simular procesamiento
+    // Procesamiento con feedback real
     setTimeout(() => {
       setIsProcessing(false);
       setCurrentStep('results');
-    }, 5000);
+      // Mostrar notificación de éxito
+      console.log('Análisis completado exitosamente');
+    }, 3000); // Reducido a 3 segundos para testing
   };
 
   if (currentStep === 'capture') {

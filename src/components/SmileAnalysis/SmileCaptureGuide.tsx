@@ -390,7 +390,16 @@ const SmileCaptureGuide = () => {
               )}
               
               {progress === 100 && (
-                <Button className="bg-gradient-success">
+                <Button 
+                  className="bg-gradient-success"
+                  onClick={() => {
+                    toast({
+                      title: "¡Listo para analizar!",
+                      description: `${completedRequired} imágenes capturadas correctamente`,
+                    });
+                    console.log('Imágenes procesadas:', Object.keys(images));
+                  }}
+                >
                   <Play className="h-4 w-4 mr-2" />
                   Iniciar Análisis
                 </Button>
