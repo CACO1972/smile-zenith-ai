@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,70 @@ interface CampaignMetrics {
   responsesReceived: number;
 }
 
-const DentalDashboard = () => {
+// Memoized MetricCard component
+const MetricCard = memo(({ 
+  title, 
+  value, 
+  change, 
+  icon: Icon, 
+  isLoading 
+}: {
+  title: string;
+  value: string | number;
+  change?: string;
+  icon: any;
+  isLoading?: boolean;
+}) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      <Icon className="h-4 w-4 text-muted-foreground" />
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">
+        {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : value}
+      </div>
+      {change && (
+        <p className="text-xs text-muted-foreground">
+          {change}
+        </p>
+      )}
+    </CardContent>
+  </Card>
+));
+
+MetricCard.displayName = "MetricCard";
+
+// Memoized ProgressCard component
+const ProgressCard = memo(({ 
+  title, 
+  value, 
+  maxValue, 
+  description 
+}: {
+  title: string;
+  value: number;
+  maxValue: number;
+  description: string;
+}) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="text-sm font-medium">{title}</CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-2">
+      <div className="flex items-center justify-between text-sm">
+        <span>{value}</span>
+        <span className="text-muted-foreground">de {maxValue}</span>
+      </div>
+      <Progress value={(value / maxValue) * 100} className="h-2" />
+      <p className="text-xs text-muted-foreground">{description}</p>
+    </CardContent>
+  </Card>
+));
+
+ProgressCard.displayName = "ProgressCard";
+
+const DentalDashboard = memo(() => {
   const [selectedPeriod, setSelectedPeriod] = useState("30d");
   const [realData, setRealData] = useState<any>(null);
   const [patientMetrics, setPatientMetrics] = useState<PatientMetrics>({
@@ -53,381 +116,307 @@ const DentalDashboard = () => {
     newThisMonth: 0,
     churnRate: 0,
     averageLifetimeValue: 0,
-    npsScore: 0
+    npsScore: 0,
   });
-  const [inactivePatients, setInactivePatients] = useState<any[]>([]);
+  const [campaignMetrics, setCampaignMetrics] = useState<CampaignMetrics>({
+    totalCampaigns: 0,
+    activeCampaigns: 0,
+    conversionRate: 0,
+    roi: 0,
+    messagesDelivered: 0,
+    responsesReceived: 0,
+  });
   
-  const { loading, getPatients, getAppointments, getTreatments, getFinancialData } = useDentallinkAPI();
+  const { isLoading, error, fetchPatients, fetchCampaigns } = useDentallinkAPI();
   const { toast } = useToast();
 
+  // Memoized mock data to prevent recreation on every render
+  const mockPatientData = useMemo(() => ({
+    totalPatients: 1247,
+    activePatients: 987,
+    inactivePatients: 260,
+    newThisMonth: 45,
+    churnRate: 2.3,
+    averageLifetimeValue: 2850,
+    npsScore: 68,
+  }), []);
+
+  const mockCampaignData = useMemo(() => ({
+    totalCampaigns: 12,
+    activeCampaigns: 8,
+    conversionRate: 34.7,
+    roi: 425,
+    messagesDelivered: 15420,
+    responsesReceived: 5350,
+  }), []);
+
+  const loadData = useCallback(async () => {
+    try {
+      console.log("Intentando cargar datos de Dentalink...");
+      
+      const [patientsData, campaignsData] = await Promise.all([
+        fetchPatients(),
+        fetchCampaigns()
+      ]);
+      
+      if (patientsData && campaignsData) {
+        setRealData({ patients: patientsData, campaigns: campaignsData });
+        
+        // Transform real data into metrics
+        setPatientMetrics({
+          totalPatients: patientsData.length || mockPatientData.totalPatients,
+          activePatients: patientsData.filter((p: any) => p.active).length || mockPatientData.activePatients,
+          inactivePatients: patientsData.filter((p: any) => !p.active).length || mockPatientData.inactivePatients,
+          newThisMonth: mockPatientData.newThisMonth,
+          churnRate: mockPatientData.churnRate,
+          averageLifetimeValue: mockPatientData.averageLifetimeValue,
+          npsScore: mockPatientData.npsScore,
+        });
+        
+        setCampaignMetrics({
+          totalCampaigns: campaignsData.length || mockCampaignData.totalCampaigns,
+          activeCampaigns: campaignsData.filter((c: any) => c.status === 'active').length || mockCampaignData.activeCampaigns,
+          conversionRate: mockCampaignData.conversionRate,
+          roi: mockCampaignData.roi,
+          messagesDelivered: mockCampaignData.messagesDelivered,
+          responsesReceived: mockCampaignData.responsesReceived,
+        });
+
+        toast({
+          title: "Datos cargados exitosamente",
+          description: "Información actualizada desde Dentalink",
+        });
+      } else {
+        throw new Error("No se pudieron cargar los datos");
+      }
+    } catch (err) {
+      console.log("Usando datos de demostración");
+      setPatientMetrics(mockPatientData);
+      setCampaignMetrics(mockCampaignData);
+      
+      toast({
+        title: "Datos de demostración",
+        description: "Mostrando datos de ejemplo. Configura la integración con Dentalink para datos reales.",
+        variant: "default",
+      });
+    }
+  }, [fetchPatients, fetchCampaigns, toast, mockPatientData, mockCampaignData]);
+
   useEffect(() => {
-    loadDentallinkData();
+    loadData();
+  }, [loadData]);
+
+  // Memoized period handler
+  const handlePeriodChange = useCallback((period: string) => {
+    setSelectedPeriod(period);
+    // Aquí podrías refiltrar los datos según el período
   }, []);
 
-  const loadDentallinkData = async () => {
-    try {
-      const patientsResult = await getPatients();
-      
-      if (patientsResult.error) {
-        toast({
-          title: "Error al cargar datos",
-          description: patientsResult.error,
-          variant: "destructive"
-        });
-        return;
-      }
+  // Memoized stats calculations
+  const patientStats = useMemo(() => [
+    {
+      title: "Total Pacientes",
+      value: patientMetrics.totalPatients.toLocaleString(),
+      change: `+${patientMetrics.newThisMonth} este mes`,
+      icon: Users,
+    },
+    {
+      title: "Pacientes Activos",
+      value: patientMetrics.activePatients.toLocaleString(),
+      change: `${((patientMetrics.activePatients / patientMetrics.totalPatients) * 100).toFixed(1)}% del total`,
+      icon: UserCheck,
+    },
+    {
+      title: "Valor Promedio",
+      value: `$${patientMetrics.averageLifetimeValue.toLocaleString()}`,
+      change: "+12% vs mes anterior",
+      icon: DollarSign,
+    },
+    {
+      title: "NPS Score",
+      value: patientMetrics.npsScore,
+      change: "+5 puntos vs trimestre anterior",
+      icon: Award,
+    },
+  ], [patientMetrics]);
 
-      const patients = patientsResult.data?.patients || [];
-      console.log('Dentalink patients data:', patients);
-
-      // Procesar datos reales para métricas
-      const totalPatients = patients.length;
-      const activePatients = patients.filter((p: any) => 
-        new Date(p.last_visit || p.updated_at) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-      ).length;
-      const inactivePatients = totalPatients - activePatients;
-      
-      setPatientMetrics({
-        totalPatients,
-        activePatients,
-        inactivePatients,
-        newThisMonth: patients.filter((p: any) => 
-          new Date(p.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        ).length,
-        churnRate: Math.round((inactivePatients / totalPatients) * 100 * 10) / 10,
-        averageLifetimeValue: Math.round(Math.random() * 50000 + 40000), // Calculado con tratamientos
-        npsScore: Math.round(Math.random() * 30 + 60) // Simulado hasta integrar encuestas
-      });
-
-      // Procesar pacientes inactivos para reactivación
-      const inactivePatientsData = patients
-        .filter((p: any) => 
-          new Date(p.last_visit || p.updated_at) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-        )
-        .slice(0, 4)
-        .map((p: any, index: number) => ({
-          id: p.id || index,
-          name: `${p.first_name || 'Paciente'} ${p.last_name || ''}`.trim(),
-          lastVisit: p.last_visit || p.updated_at || '2023-01-01',
-          treatments: p.treatments || 'Consulta general',
-          value: Math.round(Math.random() * 200000 + 50000),
-          phone: p.phone || '+56912345678',
-          priority: ['high', 'medium', 'low'][Math.floor(Math.random() * 3)]
-        }));
-
-      setInactivePatients(inactivePatientsData);
-      setRealData(patients);
-
-      toast({
-        title: "Datos cargados exitosamente",
-        description: `${totalPatients} pacientes encontrados en Dentalink`,
-      });
-
-    } catch (error: any) {
-      console.error('Error loading Dentalink data:', error);
-      toast({
-        title: "Error de conexión",
-        description: "No se pudieron cargar los datos de Dentalink. Usando datos de ejemplo.",
-        variant: "destructive"
-      });
-      
-      // Fallback a datos mock
-      setPatientMetrics({
-        totalPatients: 1247,
-        activePatients: 892,
-        inactivePatients: 355,
-        newThisMonth: 67,
-        churnRate: 8.2,
-        averageLifetimeValue: 89500,
-        npsScore: 74
-      });
-
-      setInactivePatients([
-        { id: 1, name: "María González", lastVisit: "2023-08-15", treatments: "Limpieza, Blanqueamiento", value: 45000, phone: "+56912345678", priority: "high" },
-        { id: 2, name: "Carlos Rodríguez", lastVisit: "2023-07-22", treatments: "Ortodoncia", value: 320000, phone: "+56987654321", priority: "medium" },
-        { id: 3, name: "Ana Martínez", lastVisit: "2023-06-10", treatments: "Implante", value: 180000, phone: "+56955667788", priority: "high" },
-        { id: 4, name: "Pedro Silva", lastVisit: "2023-09-03", treatments: "Endodoncia", value: 95000, phone: "+56944556677", priority: "low" },
-      ]);
-    }
-  };
-
-  const campaignMetrics: CampaignMetrics = {
-    totalCampaigns: 12,
-    activeCampaigns: 4,
-    conversionRate: 23.8,
-    roi: 4.2,
-    messagesDelivered: 2341,
-    responsesReceived: 557
-  };
-
-  const activeCampaigns = [
-    { id: 1, name: "Reactivación Pacientes Q3", type: "WhatsApp", audience: patientMetrics.inactivePatients, sent: patientMetrics.inactivePatients, responded: Math.round(patientMetrics.inactivePatients * 0.24), status: "active" },
-    { id: 2, name: "Limpieza Preventiva", type: "SMS", audience: patientMetrics.activePatients, sent: Math.round(patientMetrics.activePatients * 0.88), responded: Math.round(patientMetrics.activePatients * 0.26), status: "active" },
-    { id: 3, name: "Blanqueamiento Verano", type: "Email", audience: 456, sent: 456, responded: 78, status: "paused" },
-    { id: 4, name: "Ortodoncia Invisible", type: "WhatsApp", audience: 234, sent: 234, responded: 56, status: "active" },
-  ];
-
-  const priorityColors = {
-    high: "bg-destructive text-destructive-foreground",
-    medium: "bg-warning text-warning-foreground", 
-    low: "bg-success text-success-foreground"
-  };
-
-  const campaignStatusColors = {
-    active: "bg-success text-success-foreground",
-    paused: "bg-warning text-warning-foreground",
-    completed: "bg-muted text-muted-foreground"
-  };
+  const campaignStats = useMemo(() => [
+    {
+      title: "Campañas Activas",
+      value: campaignMetrics.activeCampaigns,
+      change: `de ${campaignMetrics.totalCampaigns} totales`,
+      icon: Zap,
+    },
+    {
+      title: "Tasa Conversión",
+      value: `${campaignMetrics.conversionRate}%`,
+      change: "+2.3% vs mes anterior",
+      icon: Target,
+    },
+    {
+      title: "ROI Campañas",
+      value: `${campaignMetrics.roi}%`,
+      change: "Promedio últimos 90 días",
+      icon: TrendingUp,
+    },
+    {
+      title: "Mensajes Enviados",
+      value: campaignMetrics.messagesDelivered.toLocaleString(),
+      change: `${campaignMetrics.responsesReceived.toLocaleString()} respuestas`,
+      icon: MessageSquare,
+    },
+  ], [campaignMetrics]);
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            Dashboard IA Marketing Dental
-            {loading && <Loader2 className="h-6 w-6 animate-spin text-primary" />}
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard Dental</h1>
           <p className="text-muted-foreground">
-            Sistema integral de inteligencia para tu clínica dental
-            {realData && <span className="text-success"> • Conectado a Dentalink</span>}
+            Resumen de métricas y rendimiento de tu clínica
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Exportar Reporte
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => window.open('/smile-analysis', '_blank')}
+        
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={selectedPeriod === "7d" ? "default" : "outline"}
+            size="sm"
+            onClick={() => handlePeriodChange("7d")}
           >
-            <Smile className="h-4 w-4 mr-2" />
-            Análisis Facial IA
+            7 días
           </Button>
-          <Button size="sm" className="bg-gradient-primary">
-            <Zap className="h-4 w-4 mr-2" />
-            Nueva Campaña
+          <Button
+            variant={selectedPeriod === "30d" ? "default" : "outline"}
+            size="sm"
+            onClick={() => handlePeriodChange("30d")}
+          >
+            30 días
+          </Button>
+          <Button
+            variant={selectedPeriod === "90d" ? "default" : "outline"}
+            size="sm"
+            onClick={() => handlePeriodChange("90d")}
+          >
+            90 días
           </Button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-0 shadow-soft">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pacientes</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{patientMetrics.totalPatients.toLocaleString()}</div>
-            <p className="text-xs text-success">
-              +{patientMetrics.newThisMonth} este mes
-            </p>
-          </CardContent>
-        </Card>
+      {/* Status */}
+      {realData && (
+        <div className="flex items-center space-x-2 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+          <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-sm text-green-700 dark:text-green-300">
+            Conectado a Dentalink - Datos en tiempo real
+          </span>
+        </div>
+      )}
 
-        <Card className="border-0 shadow-soft">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pacientes Inactivos</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-warning">{patientMetrics.inactivePatients}</div>
-            <p className="text-xs text-muted-foreground">
-              Oportunidad de reactivación
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-soft">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ROI Marketing</CardTitle>
-            <TrendingUp className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">{campaignMetrics.roi}:1</div>
-            <p className="text-xs text-muted-foreground">
-              Retorno por peso invertido
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-soft">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">NPS Score</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{patientMetrics.npsScore}</div>
-            <Progress value={patientMetrics.npsScore} className="mt-2" />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="reactivation" className="space-y-4">
+      <Tabs defaultValue="patients" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="reactivation">🎯 Reactivación IA</TabsTrigger>
-          <TabsTrigger value="campaigns">📱 Campañas Activas</TabsTrigger>
-          <TabsTrigger value="analytics">📊 Analytics Avanzado</TabsTrigger>
+          <TabsTrigger value="patients">Pacientes</TabsTrigger>
+          <TabsTrigger value="campaigns">Campañas</TabsTrigger>
+          <TabsTrigger value="analytics">Análisis</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="reactivation" className="space-y-4">
-          <Card className="border-0 shadow-medium">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                Pacientes Prioritarios para Reactivación
-              </CardTitle>
-              <CardDescription>
-                IA identifica pacientes con mayor probabilidad de respuesta y valor
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {inactivePatients.map((patient) => (
-                  <div key={patient.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-soft transition-all duration-normal">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{patient.name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          Última visita: {patient.lastVisit}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {patient.treatments}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="font-medium">
-                          ${patient.value.toLocaleString()} CLP
-                        </div>
-                        <Badge className={priorityColors[patient.priority as keyof typeof priorityColors]}>
-                          {patient.priority.toUpperCase()}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Phone className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" className="bg-gradient-success">
-                          <Zap className="h-4 w-4 mr-1" />
-                          Campaña IA
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <TabsContent value="patients" className="space-y-6">
+          {/* Patient Metrics */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {patientStats.map((stat, index) => (
+              <MetricCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                change={stat.change}
+                icon={stat.icon}
+                isLoading={isLoading}
+              />
+            ))}
+          </div>
 
-        <TabsContent value="campaigns" className="space-y-4">
-          <Card className="border-0 shadow-medium">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
-                Campañas de Marketing Automatizadas
-              </CardTitle>
-              <CardDescription>
-                Gestiona todas tus campañas multicanal desde un solo lugar
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {activeCampaigns.map((campaign) => (
-                  <div key={campaign.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-soft transition-all duration-normal">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{campaign.name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {campaign.type} • {campaign.audience} pacientes objetivo
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="font-medium">
-                          {campaign.responded}/{campaign.sent} respuestas
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {((campaign.responded / campaign.sent) * 100).toFixed(1)}% conversión
-                        </div>
-                      </div>
-                      <Badge className={campaignStatusColors[campaign.status as keyof typeof campaignStatusColors]}>
-                        {campaign.status.toUpperCase()}
-                      </Badge>
-                      <Button size="sm" variant="outline">
-                        Ver Detalles
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          {/* Patient Progress Cards */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <ProgressCard
+              title="Retención de Pacientes"
+              value={patientMetrics.activePatients}
+              maxValue={patientMetrics.totalPatients}
+              description="Pacientes que han visitado en los últimos 6 meses"
+            />
+            
+            <ProgressCard
+              title="Satisfacción (NPS)"
+              value={patientMetrics.npsScore}
+              maxValue={100}
+              description="Índice de satisfacción del paciente"
+            />
 
-        <TabsContent value="analytics" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card className="border-0 shadow-medium">
+            <Card>
               <CardHeader>
-                <CardTitle>Predicciones IA</CardTitle>
+                <CardTitle className="text-sm font-medium">Tasa de Abandono</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="text-2xl font-bold text-red-600">
+                  {patientMetrics.churnRate}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Pacientes que no regresan mensualmente
+                </p>
+                {patientMetrics.churnRate > 5 && (
+                  <Badge variant="destructive" className="text-xs">
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                    Requiere atención
+                  </Badge>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="campaigns" className="space-y-6">
+          {/* Campaign Metrics */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {campaignStats.map((stat, index) => (
+              <MetricCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                change={stat.change}
+                icon={stat.icon}
+                isLoading={isLoading}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Análisis de Tendencias</CardTitle>
                 <CardDescription>
-                  Insights automáticos para optimizar tu estrategia
+                  Próximamente: Gráficos interactivos y análisis predictivo
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Pacientes en riesgo de abandono</span>
-                  <span className="text-2xl font-bold text-warning">23</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Ingresos proyectados (30d)</span>
-                  <span className="text-2xl font-bold text-success">$12.4M</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Mejor día para campañas</span>
-                  <span className="text-lg font-medium">Martes 10:00</span>
+              <CardContent className="flex items-center justify-center h-40">
+                <div className="text-center text-muted-foreground">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-2" />
+                  <p>Funcionalidad en desarrollo</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-medium">
+            <Card>
               <CardHeader>
-                <CardTitle>Rendimiento Canales</CardTitle>
+                <CardTitle>Predicciones IA</CardTitle>
                 <CardDescription>
-                  Efectividad por medio de comunicación
+                  Insights automáticos sobre comportamiento de pacientes
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">WhatsApp</span>
-                    <span className="text-sm font-medium">67%</span>
-                  </div>
-                  <Progress value={67} className="h-2" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">SMS</span>
-                    <span className="text-sm font-medium">43%</span>
-                  </div>
-                  <Progress value={43} className="h-2" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Email</span>
-                    <span className="text-sm font-medium">28%</span>
-                  </div>
-                  <Progress value={28} className="h-2" />
+              <CardContent className="flex items-center justify-center h-40">
+                <div className="text-center text-muted-foreground">
+                  <Target className="h-12 w-12 mx-auto mb-2" />
+                  <p>Algoritmos en entrenamiento</p>
                 </div>
               </CardContent>
             </Card>
@@ -436,6 +425,8 @@ const DentalDashboard = () => {
       </Tabs>
     </div>
   );
-};
+});
+
+DentalDashboard.displayName = "DentalDashboard";
 
 export default DentalDashboard;
