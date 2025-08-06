@@ -6,23 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useDentallinkAPI } from "@/hooks/useDentallinkAPI";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Users, 
-  Calendar, 
-  DollarSign, 
-  TrendingUp,
-  MessageSquare,
-  UserCheck,
-  AlertTriangle,
-  Smile,
-  Phone,
-  Mail,
-  Zap,
-  Target,
-  Award,
-  BarChart3,
-  Loader2
-} from "lucide-react";
+import { Icons } from "@/lib/icons";
 
 interface PatientMetrics {
   totalPatients: number;

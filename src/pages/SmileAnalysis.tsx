@@ -1,21 +1,22 @@
-import { useState } from "react";
+import { useState, Suspense, lazy } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import SmileCaptureGuide from "@/components/SmileAnalysis/SmileCaptureGuide";
-import AnalysisResults from "@/components/SmileAnalysis/AnalysisResults";
-import { 
-  Brain,
-  Camera,
-  Sparkles,
-  Users,
-  Award,
-  Target,
-  ArrowRight,
-  CheckCircle,
-  Zap,
-  Play
-} from "lucide-react";
+import { Icons } from "@/lib/icons";
+
+// Lazy load heavy components
+const SmileCaptureGuide = lazy(() => import("@/components/SmileAnalysis/SmileCaptureGuide"));
+const AnalysisResults = lazy(() => import("@/components/SmileAnalysis/AnalysisResults"));
+
+// Loading component for lazy-loaded components
+const ComponentLoader = () => (
+  <div className="flex items-center justify-center p-8">
+    <div className="flex flex-col items-center gap-4">
+      <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-muted-foreground">Cargando componente...</p>
+    </div>
+  </div>
+);
 
 type AnalysisStep = 'intro' | 'capture' | 'processing' | 'results';
 
@@ -52,14 +53,16 @@ const SmileAnalysis = () => {
             ← Volver
           </Button>
         </div>
-        <SmileCaptureGuide />
+        <Suspense fallback={<ComponentLoader />}>
+          <SmileCaptureGuide />
+        </Suspense>
         <div className="max-w-4xl mx-auto mt-6 text-center">
           <Button 
             onClick={startProcessing}
             className="bg-gradient-primary"
             size="lg"
           >
-            <Play className="h-5 w-5 mr-2" />
+            <Icons.Play className="h-5 w-5 mr-2" />
             Iniciar Análisis IA
           </Button>
         </div>
@@ -74,7 +77,7 @@ const SmileAnalysis = () => {
           <CardContent className="p-8 text-center">
             <div className="relative mb-6">
               <div className="h-32 w-32 mx-auto bg-gradient-to-r from-primary to-primary/60 rounded-full flex items-center justify-center animate-pulse">
-                <Brain className="h-16 w-16 text-white" />
+                <Icons.Brain className="h-16 w-16 text-white" />
               </div>
               <div className="absolute inset-0 h-32 w-32 mx-auto border-4 border-primary/20 rounded-full animate-spin border-t-primary"></div>
             </div>
@@ -86,11 +89,11 @@ const SmileAnalysis = () => {
             
             <div className="space-y-3 text-left max-w-md mx-auto">
               <div className="flex items-center gap-3 text-sm">
-                <CheckCircle className="h-4 w-4 text-success" />
+                <Icons.CheckCircle className="h-4 w-4 text-success" />
                 <span>Detectando proporciones faciales...</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <CheckCircle className="h-4 w-4 text-success" />
+                <Icons.CheckCircle className="h-4 w-4 text-success" />
                 <span>Analizando línea de sonrisa...</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
@@ -98,7 +101,7 @@ const SmileAnalysis = () => {
                 <span>Identificando oportunidades de mejora...</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <div className="h-4 w-4 border-2 border-muted border-t-transparent rounded-full"></div>
+                <div className="h-4 w-4 border-2 border-muted-foreground/20 border-t-transparent rounded-full"></div>
                 <span>Generando recomendaciones personalizadas...</span>
               </div>
             </div>
@@ -123,10 +126,12 @@ const SmileAnalysis = () => {
             onClick={() => setCurrentStep('intro')}
             className="mb-4"
           >
-            ← Nuevo Análisis
+            ← Volver
           </Button>
         </div>
-        <AnalysisResults />
+        <Suspense fallback={<ComponentLoader />}>
+          <AnalysisResults />
+        </Suspense>
       </div>
     );
   }
