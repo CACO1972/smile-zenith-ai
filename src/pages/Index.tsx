@@ -1,39 +1,27 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Suspense, lazy } from "react";
 import HeroSection from "@/components/HeroSection";
-import DentalDashboard from "@/components/DentalDashboard";
+
+// Lazy load the heavy dashboard component
+const DentalDashboard = lazy(() => import("@/components/DentalDashboard"));
+
+// Loading component for the dashboard
+const DashboardLoader = () => (
+  <div className="container mx-auto p-6">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {[...Array(8)].map((_, i) => (
+        <div key={i} className="h-32 bg-muted animate-pulse rounded-lg"></div>
+      ))}
+    </div>
+  </div>
+);
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<"landing" | "dashboard">("landing");
-
-  if (currentView === "dashboard") {
-    return <DentalDashboard />;
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
       <HeroSection />
-      
-      {/* Quick Demo Access */}
-      <div className="py-16 px-6 text-center bg-muted/30">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold mb-4">
-            ¿Listo para ver el sistema en acción?
-          </h2>
-          <p className="text-muted-foreground mb-8">
-            Explora el sistema exclusivo desarrollado por Dr. Carlos Montoya para Clínica Miró
-          </p>
-          <Button 
-            onClick={() => setCurrentView("dashboard")}
-            size="lg"
-            className="bg-gradient-primary shadow-medium"
-          >
-            Entrar al Dashboard
-          </Button>
-        </div>
-      </div>
+      <Suspense fallback={<DashboardLoader />}>
+        <DentalDashboard />
+      </Suspense>
     </div>
   );
 };
