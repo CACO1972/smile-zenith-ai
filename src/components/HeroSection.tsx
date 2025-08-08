@@ -16,7 +16,7 @@ const HeroSection = () => {
           <div className="lg:col-span-6 xl:col-span-7">
             <Badge className="inline-flex items-center gap-1 mb-6 bg-white/20 text-white border-white/30">
               <Sparkles className="h-3 w-3" />
-              Powered by AI
+              by HUMANA.ai
             </Badge>
             
             <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-white sm:text-6xl lg:col-span-2 xl:col-auto">
