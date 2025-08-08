@@ -29,18 +29,18 @@ const Index = () => {
       <HeroSection />
       
       {/* Quick Demo Access */}
-      <div className="py-16 px-6 text-center bg-muted/30">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-bold mb-4">
+      <div className="py-12 sm:py-16 mobile-padding text-center bg-muted/30">
+        <div className="mobile-container">
+          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
             ¿Listo para ver el sistema en acción?
           </h2>
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-6 sm:mb-8 text-sm sm:text-base">
             Explora el sistema exclusivo desarrollado por Dr. Carlos Montoya para Clínica Miró
           </p>
           <Button 
             onClick={() => setCurrentView("dashboard")}
             size="lg"
-            className="bg-gradient-primary shadow-medium"
+            className="bg-gradient-primary shadow-medium touch-target w-full sm:w-auto"
           >
             Entrar al Dashboard
           </Button>

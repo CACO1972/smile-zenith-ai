@@ -180,21 +180,21 @@ const DentalDashboard = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
+    <div className="mobile-padding space-y-4 sm:space-y-6 bg-background min-h-screen mobile-safe">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
             Dashboard IA Marketing Dental
-            {loading && <Loader2 className="h-6 w-6 animate-spin text-primary" />}
+            {loading && <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-primary" />}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base">
             Sistema integral de inteligencia para tu clínica dental
             {realData && <span className="text-success"> • Conectado a Dentalink</span>}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button variant="outline" size="sm" className="touch-target">
             <BarChart3 className="h-4 w-4 mr-2" />
             Exportar Reporte
           </Button>
