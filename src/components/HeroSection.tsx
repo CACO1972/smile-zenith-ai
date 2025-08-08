@@ -2,8 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Sparkles, TrendingUp, Users, Zap } from "lucide-react";
 import heroImage from "@/assets/dental-ai-hero.jpg";
-
+import { useNavigate } from "react-router-dom";
 const HeroSection = () => {
+  const navigate = useNavigate();
   return (
     <div className="relative overflow-hidden bg-gradient-hero">
       {/* Background with subtle pattern */}
@@ -62,16 +63,11 @@ const HeroSection = () => {
               <Button 
                 size="lg" 
                 className="bg-white text-primary hover:bg-white/90 shadow-strong"
+                onClick={() => navigate("/?view=dashboard")}
+                aria-label="Ver demo en vivo"
               >
                 Ver Demo en Vivo
                 <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white/30 text-white hover:bg-white/10"
-              >
-                Solicitar Consulta Gratuita
               </Button>
             </div>
 

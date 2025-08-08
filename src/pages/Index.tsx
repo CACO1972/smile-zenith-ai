@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import HeroSection from "@/components/HeroSection";
 import DentalDashboard from "@/components/DentalDashboard";
+import { useSearchParams } from "react-router-dom";
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<"landing" | "dashboard">("landing");
+  const [searchParams] = useSearchParams();
+  const [currentView, setCurrentView] = useState<"landing" | "dashboard">(
+    searchParams.get("view") === "dashboard" ? "dashboard" : "landing"
+  );
+
+  useEffect(() => {
+    setCurrentView(searchParams.get("view") === "dashboard" ? "dashboard" : "landing");
+  }, [searchParams]);
 
   if (currentView === "dashboard") {
     return <DentalDashboard />;
@@ -13,6 +21,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Demo banner */}
+      <div className="w-full bg-muted/40 border-b border-border text-center py-2 text-sm text-muted-foreground">
+        Versión demo del beta — algunas funciones están en desarrollo. Lanzamiento pronto.
+      </div>
       {/* Hero Section */}
       <HeroSection />
       
