@@ -180,41 +180,45 @@ const DentalDashboard = () => {
   };
 
   return (
-    <div className="mobile-padding space-y-4 sm:space-y-6 bg-background min-h-screen mobile-safe">
+    <div className="mobile-padding mobile-space-y bg-background min-h-screen mobile-safe mobile-optimized">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="mobile-heading-lg font-bold tracking-tight flex items-center gap-2">
             Dashboard IA Marketing Dental
             {loading && <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-primary" />}
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
+          <p className="text-muted-foreground mobile-text">
             Sistema integral de inteligencia para tu clínica dental
             {realData && <span className="text-success"> • Conectado a Dentalink</span>}
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button variant="outline" size="sm" className="touch-target">
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+          <Button variant="outline" size="sm" className="touch-target mobile-button-sm">
             <BarChart3 className="h-4 w-4 mr-2" />
-            Exportar Reporte
+            <span className="hidden sm:inline">Exportar</span>
+            <span className="sm:hidden">Reporte</span>
           </Button>
           <Button 
             size="sm" 
             variant="outline"
             onClick={() => window.open('/smile-analysis', '_blank')}
+            className="touch-target mobile-button-sm"
           >
             <Smile className="h-4 w-4 mr-2" />
-            Análisis Facial IA
+            <span className="hidden sm:inline">Análisis Facial IA</span>
+            <span className="sm:hidden">Análisis IA</span>
           </Button>
-          <Button size="sm" className="bg-gradient-primary">
+          <Button size="sm" className="bg-gradient-primary mobile-button-sm">
             <Zap className="h-4 w-4 mr-2" />
-            Nueva Campaña
+            <span className="hidden sm:inline">Nueva Campaña</span>
+            <span className="sm:hidden">Campaña</span>
           </Button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mobile-grid-1 mobile-gap">{/* rest of the component stays the same */}
         <Card className="border-0 shadow-soft">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pacientes</CardTitle>
@@ -267,58 +271,65 @@ const DentalDashboard = () => {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="reactivation" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="reactivation">🎯 Reactivación IA</TabsTrigger>
-          <TabsTrigger value="campaigns">📱 Campañas Activas</TabsTrigger>
-          <TabsTrigger value="analytics">📊 Analytics Avanzado</TabsTrigger>
+      <Tabs defaultValue="reactivation" className="mobile-space-y">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 h-auto gap-1">
+          <TabsTrigger value="reactivation" className="mobile-button-sm text-xs sm:text-sm whitespace-nowrap">
+            🎯 <span className="hidden sm:inline">Reactivación IA</span><span className="sm:hidden">Reactivación</span>
+          </TabsTrigger>
+          <TabsTrigger value="campaigns" className="mobile-button-sm text-xs sm:text-sm whitespace-nowrap">
+            📱 <span className="hidden sm:inline">Campañas Activas</span><span className="sm:hidden">Campañas</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="mobile-button-sm text-xs sm:text-sm whitespace-nowrap">
+            📊 <span className="hidden sm:inline">Analytics Avanzado</span><span className="sm:hidden">Analytics</span>
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="reactivation" className="space-y-4">
+        <TabsContent value="reactivation" className="mobile-space-y">
           <Card className="border-0 shadow-medium">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
+              <CardTitle className="flex items-center gap-2 mobile-heading-sm">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Pacientes Prioritarios para Reactivación
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="mobile-text">
                 IA identifica pacientes con mayor probabilidad de respuesta y valor
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="mobile-space-y">
                 {inactivePatients.map((patient) => (
-                  <div key={patient.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-soft transition-all duration-normal">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{patient.name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          Última visita: {patient.lastVisit}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {patient.treatments}
-                        </span>
-                      </div>
+                  <div key={patient.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between mobile-card border rounded-lg hover:shadow-soft transition-all duration-normal space-y-4 sm:space-y-0">
+                    <div className="flex flex-col space-y-2">
+                      <span className="font-medium text-sm sm:text-base">{patient.name}</span>
+                      <span className="text-xs sm:text-sm text-muted-foreground">
+                        Última visita: {patient.lastVisit}
+                      </span>
+                      <span className="text-xs sm:text-sm text-muted-foreground">
+                        {patient.treatments}
+                      </span>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="font-medium">
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                      <div className="flex justify-between sm:text-right">
+                        <div className="font-medium text-sm sm:text-base">
                           ${patient.value.toLocaleString()} CLP
                         </div>
-                        <Badge className={priorityColors[patient.priority as keyof typeof priorityColors]}>
+                        <Badge className={`${priorityColors[patient.priority as keyof typeof priorityColors]} text-xs`}>
                           {patient.priority.toUpperCase()}
                         </Badge>
                       </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
+                      <div className="flex gap-2 justify-end sm:justify-start">
+                        <Button size="sm" variant="outline" className="touch-target flex-1 sm:flex-none">
                           <Phone className="h-4 w-4" />
+                          <span className="sr-only">Llamar</span>
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" className="touch-target flex-1 sm:flex-none">
                           <MessageSquare className="h-4 w-4" />
+                          <span className="sr-only">Mensaje</span>
                         </Button>
-                        <Button size="sm" className="bg-gradient-success">
+                        <Button size="sm" className="bg-gradient-success touch-target flex-1 sm:flex-none">
                           <Zap className="h-4 w-4 mr-1" />
-                          Campaña IA
+                          <span className="hidden sm:inline">Campaña IA</span>
+                          <span className="sm:hidden">IA</span>
                         </Button>
                       </div>
                     </div>
