@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
@@ -75,6 +75,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      smile_analysis_leads: {
+        Row: {
+          age: number | null
+          analysis_completed: boolean | null
+          analysis_data: Json | null
+          analysis_score: number | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+          utm_campaign: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          age?: number | null
+          analysis_completed?: boolean | null
+          analysis_data?: Json | null
+          analysis_score?: number | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          age?: number | null
+          analysis_completed?: boolean | null
+          analysis_data?: Json | null
+          analysis_score?: number | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
       }
       user_progress: {
         Row: {
