@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
@@ -58,8 +59,39 @@ serve(async (req) => {
 });
 
 async function getPatients() {
-  // Using mock data for development since exact API endpoints need verification
-  const mockPatients = {
+  console.log('Attempting to fetch real patient data from Dentalink API...');
+  
+  try {
+    const response = await fetch('https://api.dentalink.healthatom.com/api/v1/patients', {
+      headers: {
+        'Authorization': `Bearer ${dentalinkToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`Dentalink API error: ${response.status} - ${response.statusText}`);
+      
+      // Si la API real falla, usar datos mock como fallback
+      console.log('Falling back to mock patient data for development');
+      return getMockPatients();
+    }
+
+    const realData = await response.json();
+    console.log('Successfully fetched real patient data from Dentalink');
+    console.log('Patient count:', realData?.patients?.length || 0);
+    
+    return realData;
+    
+  } catch (error) {
+    console.error('Error fetching from Dentalink API:', error);
+    console.log('Falling back to mock patient data for development');
+    return getMockPatients();
+  }
+}
+
+function getMockPatients() {
+  return {
     patients: [
       {
         id: "1",
@@ -107,9 +139,6 @@ async function getPatients() {
       }
     ]
   };
-
-  console.log('Returning mock patient data for development');
-  return mockPatients;
 }
 
 async function getAppointments(date?: string) {
