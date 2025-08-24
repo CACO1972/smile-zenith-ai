@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
@@ -59,7 +58,10 @@ serve(async (req) => {
 });
 
 async function getPatients() {
-  console.log('Attempting to fetch real patient data from Dentalink API...');
+  console.log('=== DENTALINK API CONNECTION TEST ===');
+  console.log('API Token configured:', dentalinkToken ? 'YES' : 'NO');
+  console.log('Token length:', dentalinkToken ? dentalinkToken.length : 0);
+  console.log('Attempting to fetch from: https://api.dentalink.healthatom.com/api/v1/patients');
   
   try {
     const response = await fetch('https://api.dentalink.healthatom.com/api/v1/patients', {
@@ -69,23 +71,32 @@ async function getPatients() {
       },
     });
 
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
+      const errorText = await response.text();
       console.error(`Dentalink API error: ${response.status} - ${response.statusText}`);
+      console.error('Error response body:', errorText);
       
       // Si la API real falla, usar datos mock como fallback
-      console.log('Falling back to mock patient data for development');
+      console.log('=== FALLING BACK TO MOCK DATA ===');
       return getMockPatients();
     }
 
     const realData = await response.json();
-    console.log('Successfully fetched real patient data from Dentalink');
+    console.log('=== SUCCESS: REAL DENTALINK DATA ===');
     console.log('Patient count:', realData?.patients?.length || 0);
+    console.log('Data structure:', Object.keys(realData || {}));
     
     return realData;
     
   } catch (error) {
-    console.error('Error fetching from Dentalink API:', error);
-    console.log('Falling back to mock patient data for development');
+    console.error('=== FETCH ERROR ===');
+    console.error('Error type:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Full error:', error);
+    console.log('=== FALLING BACK TO MOCK DATA ===');
     return getMockPatients();
   }
 }
