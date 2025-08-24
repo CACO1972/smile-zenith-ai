@@ -78,35 +78,54 @@ const DentalDashboard = () => {
       }
 
       const patients = patientsResult.data?.patients || [];
-      console.log('Dentalink patients data:', patients);
+      console.log('=== PROCESSING DENTALINK PATIENTS ===');
+      console.log('Total patients received:', patients.length);
+      console.log('First patient example:', patients[0]);
 
       // Procesar datos reales para métricas
       const totalPatients = patients.length;
-      const activePatients = patients.filter((p: any) => 
-        new Date(p.last_visit || p.updated_at) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-      ).length;
-      const inactivePatients = totalPatients - activePatients;
+      const now = new Date();
+      const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       
-      setPatientMetrics({
+      const activePatients = patients.filter((p: any) => {
+        const lastVisit = p.last_visit || p.updated_at;
+        return lastVisit && new Date(lastVisit) > threeMonthsAgo;
+      }).length;
+      
+      const inactivePatientsCount = totalPatients - activePatients;
+      
+      const newThisMonth = patients.filter((p: any) => 
+        p.created_at && new Date(p.created_at) > oneMonthAgo
+      ).length;
+
+      const updatedMetrics = {
         totalPatients,
         activePatients,
-        inactivePatients,
-        newThisMonth: patients.filter((p: any) => 
-          new Date(p.created_at) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        ).length,
-        churnRate: Math.round((inactivePatients / totalPatients) * 100 * 10) / 10,
+        inactivePatients: inactivePatientsCount,
+        newThisMonth,
+        churnRate: totalPatients > 0 ? Math.round((inactivePatientsCount / totalPatients) * 100 * 10) / 10 : 0,
         averageLifetimeValue: Math.round(Math.random() * 50000 + 40000), // Calculado con tratamientos
         npsScore: Math.round(Math.random() * 30 + 60) // Simulado hasta integrar encuestas
-      });
+      };
 
-      // Procesar pacientes inactivos para reactivación
+      console.log('=== CALCULATED METRICS ===');
+      console.log('Total:', updatedMetrics.totalPatients);
+      console.log('Active:', updatedMetrics.activePatients);
+      console.log('Inactive:', updatedMetrics.inactivePatients);
+      console.log('New this month:', updatedMetrics.newThisMonth);
+
+      setPatientMetrics(updatedMetrics);
+
+      // Procesar pacientes inactivos REALES para reactivación
       const inactivePatientsData = patients
-        .filter((p: any) => 
-          new Date(p.last_visit || p.updated_at) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-        )
+        .filter((p: any) => {
+          const lastVisit = p.last_visit || p.updated_at;
+          return !lastVisit || new Date(lastVisit) < threeMonthsAgo;
+        })
         .slice(0, 4)
         .map((p: any, index: number) => ({
-          id: p.id || index,
+          id: p.id || `patient-${index}`,
           name: `${p.first_name || 'Paciente'} ${p.last_name || ''}`.trim(),
           lastVisit: p.last_visit || p.updated_at || '2023-01-01',
           treatments: p.treatments || 'Consulta general',
@@ -115,39 +134,25 @@ const DentalDashboard = () => {
           priority: ['high', 'medium', 'low'][Math.floor(Math.random() * 3)]
         }));
 
+      console.log('=== INACTIVE PATIENTS FOR REACTIVATION ===');
+      console.log('Count:', inactivePatientsData.length);
+      console.log('Patients:', inactivePatientsData.map(p => p.name));
+
       setInactivePatients(inactivePatientsData);
       setRealData(patients);
 
       toast({
-        title: "Datos cargados exitosamente",
-        description: `${totalPatients} pacientes encontrados en Dentalink`,
+        title: "✅ Datos de Dentalink cargados",
+        description: `${totalPatients} pacientes reales procesados exitosamente`,
       });
 
     } catch (error: any) {
       console.error('Error loading Dentalink data:', error);
       toast({
         title: "Error de conexión",
-        description: "No se pudieron cargar los datos de Dentalink. Usando datos de ejemplo.",
+        description: "No se pudieron cargar los datos de Dentalink",
         variant: "destructive"
       });
-      
-      // Fallback a datos mock
-      setPatientMetrics({
-        totalPatients: 1247,
-        activePatients: 892,
-        inactivePatients: 355,
-        newThisMonth: 67,
-        churnRate: 8.2,
-        averageLifetimeValue: 89500,
-        npsScore: 74
-      });
-
-      setInactivePatients([
-        { id: 1, name: "María González", lastVisit: "2023-08-15", treatments: "Limpieza, Blanqueamiento", value: 45000, phone: "+56912345678", priority: "high" },
-        { id: 2, name: "Carlos Rodríguez", lastVisit: "2023-07-22", treatments: "Ortodoncia", value: 320000, phone: "+56987654321", priority: "medium" },
-        { id: 3, name: "Ana Martínez", lastVisit: "2023-06-10", treatments: "Implante", value: 180000, phone: "+56955667788", priority: "high" },
-        { id: 4, name: "Pedro Silva", lastVisit: "2023-09-03", treatments: "Endodoncia", value: 95000, phone: "+56944556677", priority: "low" },
-      ]);
     }
   };
 
@@ -190,7 +195,7 @@ const DentalDashboard = () => {
           </h1>
           <p className="text-muted-foreground mobile-text">
             Sistema integral de inteligencia para tu clínica dental
-            {realData && <span className="text-success"> • Conectado a Dentalink</span>}
+            {realData && <span className="text-success font-medium"> • ✅ Conectado a Dentalink ({patientMetrics.totalPatients} pacientes)</span>}
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
@@ -218,7 +223,7 @@ const DentalDashboard = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="mobile-grid-1 mobile-gap">{/* rest of the component stays the same */}
+      <div className="mobile-grid-1 mobile-gap">
         <Card className="border-0 shadow-soft">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pacientes</CardTitle>
@@ -290,52 +295,62 @@ const DentalDashboard = () => {
               <CardTitle className="flex items-center gap-2 mobile-heading-sm">
                 <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 Pacientes Prioritarios para Reactivación
+                {realData && <Badge variant="outline" className="text-xs">Datos Reales Dentalink</Badge>}
               </CardTitle>
               <CardDescription className="mobile-text">
                 IA identifica pacientes con mayor probabilidad de respuesta y valor
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="mobile-space-y">
-                {inactivePatients.map((patient) => (
-                  <div key={patient.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between mobile-card border rounded-lg hover:shadow-soft transition-all duration-normal space-y-4 sm:space-y-0">
-                    <div className="flex flex-col space-y-2">
-                      <span className="font-medium text-sm sm:text-base">{patient.name}</span>
-                      <span className="text-xs sm:text-sm text-muted-foreground">
-                        Última visita: {patient.lastVisit}
-                      </span>
-                      <span className="text-xs sm:text-sm text-muted-foreground">
-                        {patient.treatments}
-                      </span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-                      <div className="flex justify-between sm:text-right">
-                        <div className="font-medium text-sm sm:text-base">
-                          ${patient.value.toLocaleString()} CLP
+              {inactivePatients.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    {loading ? "Cargando pacientes..." : "No hay pacientes inactivos para mostrar"}
+                  </p>
+                </div>
+              ) : (
+                <div className="mobile-space-y">
+                  {inactivePatients.map((patient) => (
+                    <div key={patient.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between mobile-card border rounded-lg hover:shadow-soft transition-all duration-normal space-y-4 sm:space-y-0">
+                      <div className="flex flex-col space-y-2">
+                        <span className="font-medium text-sm sm:text-base">{patient.name}</span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                          Última visita: {new Date(patient.lastVisit).toLocaleDateString()}
+                        </span>
+                        <span className="text-xs sm:text-sm text-muted-foreground">
+                          {patient.treatments}
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                        <div className="flex justify-between sm:text-right">
+                          <div className="font-medium text-sm sm:text-base">
+                            ${patient.value.toLocaleString()} CLP
+                          </div>
+                          <Badge className={`${priorityColors[patient.priority as keyof typeof priorityColors]} text-xs`}>
+                            {patient.priority.toUpperCase()}
+                          </Badge>
                         </div>
-                        <Badge className={`${priorityColors[patient.priority as keyof typeof priorityColors]} text-xs`}>
-                          {patient.priority.toUpperCase()}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-2 justify-end sm:justify-start">
-                        <Button size="sm" variant="outline" className="touch-target flex-1 sm:flex-none">
-                          <Phone className="h-4 w-4" />
-                          <span className="sr-only">Llamar</span>
-                        </Button>
-                        <Button size="sm" variant="outline" className="touch-target flex-1 sm:flex-none">
-                          <MessageSquare className="h-4 w-4" />
-                          <span className="sr-only">Mensaje</span>
-                        </Button>
-                        <Button size="sm" className="bg-gradient-success touch-target flex-1 sm:flex-none">
-                          <Zap className="h-4 w-4 mr-1" />
-                          <span className="hidden sm:inline">Campaña IA</span>
-                          <span className="sm:hidden">IA</span>
-                        </Button>
+                        <div className="flex gap-2 justify-end sm:justify-start">
+                          <Button size="sm" variant="outline" className="touch-target flex-1 sm:flex-none">
+                            <Phone className="h-4 w-4" />
+                            <span className="sr-only">Llamar</span>
+                          </Button>
+                          <Button size="sm" variant="outline" className="touch-target flex-1 sm:flex-none">
+                            <MessageSquare className="h-4 w-4" />
+                            <span className="sr-only">Mensaje</span>
+                          </Button>
+                          <Button size="sm" className="bg-gradient-success touch-target flex-1 sm:flex-none">
+                            <Zap className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Campaña IA</span>
+                            <span className="sm:hidden">IA</span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
